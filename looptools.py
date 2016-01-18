@@ -88,66 +88,21 @@ def get_loop_branches(parents, l_sites=None):
             daughters[i] = daughters[i][np.argsort(l_sites[daughters[i]])]
     return daughters
 
-def stack_lems(l_sites, r_sites):
+def stack_lefs(l_sites, r_sites):
     order = np.argsort(l_sites)
-    n_conds = np.ones(l_sites.size)
+    n_lefs = np.ones(l_sites.size)
     parent_i, i = 0,0
     while True:
         if ((l_sites[order[i+1]]==l_sites[order[i]]+1)
             and (r_sites[order[i+1]]==r_sites[order[i]]-1)):
-            n_conds[order[i+1]] -= 1
-            n_conds[order[parent_i]] += 1
+            n_lefs[order[i+1]] -= 1
+            n_lefs[order[parent_i]] += 1
         else:
             parent_i = i+1
         i += 1
         if i >= l_sites.size-1:
             break
-    return n_conds
-
-#def plot_loop(l, r, n_cond=0, height=None, y=5, label_shift=0, fontsize=14):
-#from matplotlib.patches import Arc
-#    arc_center = ((l+r)/2,y)
-#    arc_height = ((r-l) if (height is None) else height)
-#    e = Arc(xy=arc_center,
-#            width=r-l,
-#            height=arc_height,
-#            theta1=0,
-#            theta2=180,
-#            alpha=0.3,
-#            lw=5)
-#    plt.gca().add_artist(e)
-#    if n_cond > 1:
-#        plt.text(x=arc_center[0],
-#                 y=arc_center[1]+arc_height*0.5 + label_shift,
-#                 horizontalalignment='center',
-#                 verticalalignment='center',
-#                 s=str(int(n_cond)),
-#                 fontsize=fontsize)
-
-#def plot_lems(l_sites, r_sites, L, fontsize=14):
-#    plt.figure(figsize=(15,5))
-#    plt.gca().spines['top'].set_visible(False)
-#    plt.gca().spines['left'].set_visible(False)
-#    plt.gca().spines['right'].set_visible(False)
-#    plt.gca().tick_params(
-#        which='both',
-#        bottom='on',
-#        right='off',
-#        left='off',
-#        direction='out',
-#        top='off')
-#    plt.yticks([])
-#
-#    n_conds = stack_lems(l_sites,r_sites)
-#    max_l = max([i-j for (i,j) in zip(r_sites, l_sites)])
-#    for i in range(l_sites.size):
-#        plot_loop(l_sites[i],r_sites[i], n_conds[i],
-#                  label_shift=max_l * 0.05,
-#                  fontsize=fontsize)
-#
-#    plt.xlim(-L*0.025,L*1.025)
-#    plt.ylim(0, max_l * 0.7)
-
+    return n_lefs
 
 def get_backbone(l_sites, r_sites, rootsMask=None, N=None, include_tails=True):
     backboneidxs = []
@@ -171,4 +126,5 @@ def get_backbone(l_sites, r_sites, rootsMask=None, N=None, include_tails=True):
 
     backboneidxs = np.concatenate(backboneidxs)
     return backboneidxs
+
 
