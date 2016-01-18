@@ -21,7 +21,7 @@ cdef inline np.int64_t rand_int(int N_MAX):
     #return rand() % N_MAX
 
 cdef inline np.float64_t rand_exp(np.float64_t mean):
-    return np.random.exponential(mean)
+    return np.random.exponential(mean) if mean > 0 else 0
 
 cdef inline float rand_float():
     #return np.random.random()
@@ -51,24 +51,22 @@ cdef class System:
     cdef np.float64_t time
 
     cdef np.float_t [:] vels
-    # vels:
-    #0 to N-1     left leg vels left;
-    #N to 2*N-1   left leg vels right;
-    #2*N to 3*N-1 right leg vels left;
-    #3*N to 4*N   right leg vels right;
     cdef np.float_t [:] lifespans
+    cdef np.float_t [:] rebinding_times
     cdef np.float_t [:] perms
 
     cdef np.int64_t [:] lattice
     cdef np.int64_t [:] locs
 
-    def __cinit__(self, L, N, vels, lifespans, init_locs=None, perms=None):
+    def __cinit__(self, L, N, vels, lifespans, rebinding_times,
+                  init_locs=None, perms=None):
         self.L = L
         self.N = N
         self.lattice = -1 * np.ones(L, dtype=np.int64)
         self.locs = -1 * np.ones(2*N, dtype=np.int64)
         self.vels = vels
         self.lifespans = lifespans
+        self.rebinding_times = rebinding_times
 
         if perms is None:
             self.perms = np.ones(L+1, dtype=np.float64)
@@ -99,7 +97,7 @@ cdef class System:
         return self.move_leg(leg_idx, new_pos)
 
     cdef np.int64_t move_leg(System self, np.int64_t leg_idx, np.int64_t new_pos):
-        if self.lattice[new_pos] >=0:
+        if (new_pos >= 0) and (self.lattice[new_pos] >=0):
             return 0
 
         cdef np.int64_t prev_pos
@@ -111,7 +109,9 @@ cdef class System:
             if self.lattice[prev_pos] < 0:
                 return 0
             self.lattice[prev_pos] = -1
-        self.lattice[new_pos] = leg_idx
+
+        if new_pos >= 0:
+            self.lattice[new_pos] = leg_idx
 
         return 1
 
@@ -122,11 +122,15 @@ cdef class System:
             if (self.locs[i] == self.locs[i+self.N]):
                 print 'loop ' , i, 'has both legs at ', self.locs[i]
                 okay = 0
-            elif (self.locs[i] < 0) or (self.locs[i] >= self.L):
+            if (self.locs[i] >= self.L):
                 print 'leg ', i, 'is located outside of the system: ', self.locs[i]
                 okay = 0
-            elif (self.locs[i+self.N] < 0) or (self.locs[i+self.N] >= self.L):
-                print 'leg ', i, 'is located outside of the system: ', self.locs[i+self.N]
+            if (self.locs[i+self.N] >= self.L):
+                print 'leg ', i+self.N, 'is located outside of the system: ', self.locs[i+self.N]
+                okay = 0
+            if (((self.locs[i] < 0) and (self.locs[i+self.N] >= 0 ))
+                or ((self.locs[i] >= 0) and (self.locs[i+self.N] < 0 ))):
+                print 'the legs of the loop', i, 'are inconsistent: ', self.locs[i], self.locs[i+self.N]
                 okay = 0
         return okay
 
@@ -151,6 +155,7 @@ cdef class Event_t:
             return 1 if self.time >  other.time else 0
         elif op == 5:
             return 1 if self.time >= other.time else 0
+
 
 cdef class Event_heap:
     """Taken from the official Python website"""
@@ -186,6 +191,7 @@ cdef class Event_heap:
                 return entry
         return Event_t(0, 0.0)
 
+
 cdef regenerate_event(System system, Event_heap evheap, np.int64_t event_idx):
     """
     Regenerate an event in an event heap. If the event is currently impossible (e.g. a step
@@ -196,14 +202,15 @@ cdef regenerate_event(System system, Event_heap evheap, np.int64_t event_idx):
     0 to 2N-1 : a step to the left
     2N to 4N-1 : a step to the right
     4N to 5N-1 : passive unbinding
+    5N to 6N-1 : rebinding to a randomly chosen site
     """
 
-    cdef np.int64_t leg_idx
+    cdef np.int64_t leg_idx, loop_idx
     cdef np.int64_t direction
     cdef np.float_t local_vel
 
     # A step to the left or to the right.
-    if event_idx < 4 * system.N:
+    if (event_idx < 4 * system.N) :
         if event_idx < 2 * system.N:
             leg_idx = event_idx
             direction = -1
@@ -211,22 +218,32 @@ cdef regenerate_event(System system, Event_heap evheap, np.int64_t event_idx):
             leg_idx = event_idx - 2 * system.N
             direction = 1
 
-        # Local velocity = velocity * permeability
-        local_vel = (system.perms[system.locs[leg_idx] + (direction+1)/2]
-            * system.vels[leg_idx + (direction+1) * system.N])
+        if (system.locs[leg_idx] >= 0):
+            # Local velocity = velocity * permeability
+            local_vel = (system.perms[system.locs[leg_idx] + (direction+1)/2]
+                * system.vels[leg_idx + (direction+1) * system.N])
 
-        if local_vel > 0:
-            if system.lattice[system.locs[leg_idx] + direction] < 0:
-                evheap.add_event(
-                    event_idx,
-                    system.time + rand_exp(1.0 / local_vel))
+            if local_vel > 0:
+                if system.lattice[system.locs[leg_idx] + direction] < 0:
+                    evheap.add_event(
+                        event_idx,
+                        system.time + rand_exp(1.0 / local_vel))
 
     # Passive unbinding.
     elif (event_idx >= 4 * system.N) and (event_idx < 5 * system.N):
-        leg_idx = event_idx - 4 * system.N
-        evheap.add_event(
-            event_idx,
-            system.time + rand_exp(system.lifespans[leg_idx]))
+        loop_idx = event_idx - 4 * system.N
+        if (system.locs[loop_idx] >= 0) and (system.locs[loop_idx+system.N] >= 0):
+            evheap.add_event(
+                event_idx,
+                system.time + rand_exp(system.lifespans[loop_idx]))
+
+    # Rebinding from the solution to a random site.
+    elif (event_idx >= 5 * system.N) and (event_idx < 6 * system.N):
+        loop_idx = event_idx - 5 * system.N
+        if (system.locs[loop_idx] < 0) and (system.locs[loop_idx+system.N] < 0):
+            evheap.add_event(
+                event_idx,
+                system.time + rand_exp(system.rebinding_times[loop_idx]))
 
 cdef regenerate_neighbours(System system, Event_heap evheap, np.int64_t pos):
     """
@@ -249,10 +266,12 @@ cdef regenerate_all_loop_events(System system, Event_heap evheap,
     """
 
     regenerate_event(system, evheap, loop_idx)
-    regenerate_event(system, evheap, loop_idx+system.N)
-    regenerate_event(system, evheap, loop_idx+2*system.N)
-    regenerate_event(system, evheap, loop_idx+3*system.N)
-    regenerate_event(system, evheap, loop_idx+4*system.N)
+    regenerate_event(system, evheap, loop_idx + system.N)
+    regenerate_event(system, evheap, loop_idx + 2 * system.N)
+    regenerate_event(system, evheap, loop_idx + 3 * system.N)
+    regenerate_event(system, evheap, loop_idx + 4 * system.N)
+    regenerate_event(system, evheap, loop_idx + 5 * system.N)
+
 
 cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx) except 0:
     """
@@ -268,9 +287,10 @@ cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx)
     0 to 2N-1 : a step to the left
     2N to 4N-1 : a step to the right
     4N to 5N-1 : passive unbinding
+    5N to 6N-1 : rebinding to a randomly chosen site
     """
 
-    cdef np.int64_t status = 1
+    cdef np.int64_t status
     cdef np.int64_t new_pos, leg_idx, prev_pos, direction, loop_idx
 
     if event_idx < 4 * system.N:
@@ -283,43 +303,63 @@ cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx)
             direction = 1
 
         prev_pos = system.locs[leg_idx]
-        # make a step only if there is no boundary and the new position is unoccupied
-        if (system.perms[prev_pos + (direction + 1) / 2] > 0):
-            if system.lattice[prev_pos+direction] < 0:
-                status *= system.make_step(leg_idx, direction)
-                # regenerate events for the previous and the new neighbors
-                regenerate_neighbours(system, evheap, prev_pos)
-                regenerate_neighbours(system, evheap, prev_pos+direction)
+        # check if the loop was attached to the chromatin
+        status = 1
+        if (prev_pos >= 0):
+            # make a step only if there is no boundary and the new position is unoccupied
+            if (system.perms[prev_pos + (direction + 1) / 2] > 0):
+                if system.lattice[prev_pos+direction] < 0:
+                    status *= system.make_step(leg_idx, direction)
+                    # regenerate events for the previous and the new neighbors
+                    regenerate_neighbours(system, evheap, prev_pos)
+                    regenerate_neighbours(system, evheap, prev_pos+direction)
 
-        # regenerate the performed event
-        regenerate_event(system, evheap, event_idx)
+            # regenerate the performed event
+            regenerate_event(system, evheap, event_idx)
 
     elif (event_idx >= 4 * system.N) and (event_idx < 5 * system.N):
         # rebind the loop
         loop_idx = event_idx - 4 * system.N
 
+        status = 2
+        # check if the loop was attached to the chromatin
+        if (system.locs[loop_idx] < 0) or (system.locs[loop_idx+system.N] < 0):
+            status = 0
+
+        status *= system.move_leg(loop_idx, -1)
+        status *= system.move_leg(loop_idx+system.N, -1)
+
+        # regenerate events for the loop itself and for its previous neighbours
+        regenerate_all_loop_events(system, evheap, loop_idx)
+
         prev_pos1 = system.locs[loop_idx]
         prev_pos2 = system.locs[loop_idx + system.N]
-
-        while True:
-            new_pos = rand_int(system.L-1)
-            if (system.lattice[new_pos] < 0 and system.lattice[new_pos+1] < 0
-                and system.perms[new_pos+1] > 0):
-                break
-
-        status = 2
-
-        status *= system.move_leg(loop_idx, new_pos)
-        status *= system.move_leg(loop_idx+system.N, new_pos+1)
-
-        # regenerate events for the previous neighbors
         regenerate_neighbours(system, evheap, prev_pos1)
         regenerate_neighbours(system, evheap, prev_pos2)
 
-        # regenerate all events for itself
-        regenerate_all_loop_events(system, evheap, loop_idx)
+    elif (event_idx >= 5 * system.N) and (event_idx < 6 * system.N):
+        loop_idx = event_idx - 5 * system.N
 
-        # regenerate events for the new neighbors
+        status = 2
+        # check if the loop was not attached to the chromatin
+        if (system.locs[loop_idx] >= 0) or (system.locs[loop_idx+system.N] >= 0):
+            status = 0
+
+        # find a new position for the LEM (a brute force method, can be
+        # improved)
+        while True:
+            new_pos = rand_int(system.L-1)
+            if (system.lattice[new_pos] < 0
+                and system.lattice[new_pos+1] < 0
+                and system.perms[new_pos+1] > 0):
+                break
+
+        # rebind the loop
+        status *= system.move_leg(loop_idx, new_pos)
+        status *= system.move_leg(loop_idx+system.N, new_pos+1)
+
+        # regenerate events for the loop itself and for its new neighbours
+        regenerate_all_loop_events(system, evheap, loop_idx)
         regenerate_neighbours(system, evheap, new_pos)
         regenerate_neighbours(system, evheap, new_pos + 1)
     else:
@@ -329,8 +369,8 @@ cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx)
 
 
 cpdef simulate(p, verbose=True):
-    '''Simulate a system of loop extruding condensins on a 1d lattice.
-    Allows to simulate two different types of condensins, with different
+    '''Simulate a system of loop extruding LEFs on a 1d lattice.
+    Allows to simulate two different types of LEFs, with different
     residence times and rates of backstep.
 
     Parameters
@@ -338,24 +378,27 @@ cpdef simulate(p, verbose=True):
     p : a dictionary with parameters
         PROCESS_NAME : the title of the simulation
         L : the number of sites in the lattice
-        N : the number of condensins
+        N : the number of LEFs
         R_EXTEND : the rate of loop extension,
             can be set globally with a float,
             or individually with an array of floats
-        R_SHRINK : the rate of condensin backsteps,
+        R_SHRINK : the rate of LEF backsteps,
             can be set globally with a float,
             or individually with an array of floats
         R_OFF : the rate of detaching from the polymer,
             can be set globally with a float,
             or individually with an array of floats
-        INIT_L_SITES : the initial positions of the left legs of the condensins,
-                       If -1, the position of the condensin is chosen randomly,
+        REBINDING_TIME : the average time that a LEF spends in solution before
+            rebinding to the polymer; can be set globally with a float,
+            or individually with an array of floats
+        INIT_L_SITES : the initial positions of the left legs of the LEFs,
+                       If -1, the position of the LEF is chosen randomly,
                        with both legs next to each other. By default is -1 for
-                       all condensins.
-        INIT_R_SITES : the initial positions of the right legs of the condensins
-        ACTIVATION_TIMES : the times at which the condensins enter the system.
-            By default equals 0 for all condensins.
-            Must be 0 for the condensins with defined INIT_L_SITES
+                       all LEFs.
+        INIT_R_SITES : the initial positions of the right legs of the LEFs
+        ACTIVATION_TIMES : the times at which the LEFs enter the system.
+            By default equals 0 for all LEFs.
+            Must be 0 for the LEFs with defined INIT_L_SITES
             and INIT_R_SITES.
 
         T_MAX : the duration of the simulation
@@ -374,11 +417,16 @@ cpdef simulate(p, verbose=True):
 
     cdef np.float64_t [:] VELS = np.zeros(4*N, dtype=np.float64)
     cdef np.float64_t [:] LIFESPANS = np.zeros(N, dtype=np.float64)
+    cdef np.float64_t [:] REBINDING_TIMES = np.zeros(N, dtype=np.float64)
 
     for i in range(N):
         VELS[i] =   VELS[i+3*N] = p['R_EXTEND'][i] if type(p['R_EXTEND']) in (list, np.ndarray) else p['R_EXTEND']
         VELS[i+N] = VELS[i+2*N] = p['R_SHRINK'][i] if type(p['R_SHRINK']) in (list, np.ndarray) else p['R_SHRINK']
         LIFESPANS[i] = (1.0 / p['R_OFF'][i]) if type(p['R_OFF']) in (list, np.ndarray) else 1.0 / p['R_OFF']
+        REBINDING_TIMES[i] = (
+            (p['REBINDING_TIME'][i])
+            if type(p.get('REBINDING_TIME',0)) in (list, np.ndarray)
+            else p.get('REBINDING_TIME',0))
 
     cdef np.int64_t [:] INIT_LOCS = (-1) * np.ones(2*N, dtype=np.int64)
     if ('INIT_L_SITES' in p) and ('INIT_R_SITES' in p):
@@ -401,7 +449,7 @@ cpdef simulate(p, verbose=True):
         raise Exception(
             'The length of the provided array of permeabilities should be L+1')
 
-    cdef System system = System(L, N, VELS, LIFESPANS, INIT_LOCS, PERMS)
+    cdef System system = System(L, N, VELS, LIFESPANS, REBINDING_TIMES, INIT_LOCS, PERMS)
 
     cdef np.int64_t [:,:] l_sites_traj = np.zeros((N_SNAPSHOTS, N), dtype=np.int64)
     cdef np.int64_t [:,:] r_sites_traj = np.zeros((N_SNAPSHOTS, N), dtype=np.int64)
@@ -415,14 +463,14 @@ cpdef simulate(p, verbose=True):
 
     cdef Event_heap evheap = Event_heap()
 
-    # Move condensins onto the lattice at the corresponding activations times.
+    # Move LEFs onto the lattice at the corresponding activations times.
     # If the positions were predefined, initialize the fall-off time in the
     # standard way.
     for i in range(system.N):
         # if the loop location is not predefined, activate it
         # at the predetermined time
         if (INIT_LOCS[i] == -1) and (INIT_LOCS[i] == -1):
-            evheap.add_event(i + 4 * system.N, ACTIVATION_TIMES[i])
+            evheap.add_event(i + 5 * system.N, ACTIVATION_TIMES[i])
 
         # otherwise, the loop is already placed on the lattice and we need to
         # regenerate all of its events and the motion of its neighbours
