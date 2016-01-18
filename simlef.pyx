@@ -326,14 +326,18 @@ cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx)
         if (system.locs[loop_idx] < 0) or (system.locs[loop_idx+system.N] < 0):
             status = 0
 
+        # save previous positions, but don't update neighbours until the loop
+        # has moved
+        prev_pos1 = system.locs[loop_idx]
+        prev_pos2 = system.locs[loop_idx + system.N]
+
         status *= system.move_leg(loop_idx, -1)
         status *= system.move_leg(loop_idx+system.N, -1)
 
         # regenerate events for the loop itself and for its previous neighbours
         regenerate_all_loop_events(system, evheap, loop_idx)
 
-        prev_pos1 = system.locs[loop_idx]
-        prev_pos2 = system.locs[loop_idx + system.N]
+        # update the neighbours after the loop has moved
         regenerate_neighbours(system, evheap, prev_pos1)
         regenerate_neighbours(system, evheap, prev_pos2)
 
