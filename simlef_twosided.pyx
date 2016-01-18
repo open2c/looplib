@@ -335,8 +335,8 @@ cdef class Event_heap:
 
 
 cpdef simulate(p):
-    '''Simulate a system of loop extruding condensins on a 1d lattice.
-    Allows to simulate two different types of condensins, with different
+    '''Simulate a system of loop extruding LEFs on a 1d lattice.
+    Allows to simulate two different types of LEFs, with different
     residence times and rates of backstep.
 
     Parameters
@@ -344,27 +344,27 @@ cpdef simulate(p):
     p : a dictionary with parameters
         PROCESS_NAME : the title of the simulation
         L : the number of sites in the lattice
-        N : the number of condensins
+        N : the number of LEFs
         R_EXTEND : the rate of loop extension,
             can be set globally with a float,
             or individually with an array of floats
-        R_SHRINK : the rate of condensin backsteps,
+        R_SHRINK : the rate of LEF backsteps,
             can be set globally with a float,
             or individually with an array of floats
         R_OFF : the rate of detaching from the polymer,
             can be set globally with a float,
             or individually with an array of floats
-        INIT_L_SITES : the initial positions of the left legs of the condensins,
-                       If -1, the position of the condensin is chosen randomly,
+        INIT_L_SITES : the initial positions of the left legs of the LEFs,
+                       If -1, the position of the LEF is chosen randomly,
                        with both legs next to each other. By default is -1 for
-                       all condensins.
-        INIT_R_SITES : the initial positions of the right legs of the condensins
-        ACTIVATION_TIMES : the times at which the condensins enter the system.
-            By default equals 0 for all condensins.
-            Must be 0 for the condensins with defined INIT_L_SITES
+                       all LEFs.
+        INIT_R_SITES : the initial positions of the right legs of the LEFs
+        ACTIVATION_TIMES : the times at which the LEFs enter the system.
+            By default equals 0 for all LEFs.
+            Must be 0 for the LEFs with defined INIT_L_SITES
             and INIT_R_SITES.
 
-        ONE_SIDE_EXTEND : if True, both condensin legs extrude loops
+        ONE_SIDE_EXTEND : if True, both LEF legs extrude loops
                           independently. Otherwise, if one is blocked, the other
                           stops loop extrusion too.
         T_MAX : the duration of the simulation
@@ -420,7 +420,7 @@ cpdef simulate(p):
     cdef np.int64_t snapshot_idx = 0
 
     cdef Event_heap evheap = Event_heap()
-    # Move condensins onto the lattice at the corresponding activations times.
+    # Move LEFs onto the lattice at the corresponding activations times.
     # If the positions were predefined, initialize the fall-off time in the
     # standard way.
     for i in range(state.N):
