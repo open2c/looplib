@@ -10,7 +10,7 @@ cpdef get_parent_loops(l_sites, r_sites):
     cdef np.int_t[:] sortarg = np.argsort(np.r_[l_sites.astype(np.float64)+0.1,
                                                 r_sites.astype(np.float64)-0.1])
     cdef np.int_t[:] looporder = np.take(np.r_[np.arange(1,N+1),-np.arange(1,N+1)],sortarg)
-    cdef np.int_t[:] parents = -2 * np.ones(N, dtype=np.int)
+    cdef np.int_t[:] parents = -3 * np.ones(N, dtype=np.int)
 
     cdef np.int_t i = 0
     cdef np.int_t curloop = 0
@@ -18,15 +18,20 @@ cpdef get_parent_loops(l_sites, r_sites):
     cdef np.int_t[:] stack = -1 * np.ones(N+1, dtype=np.int)
     cdef np.int_t stack_level = 0
     for i in range(2*N):
-        curloop = looporder[i] - 1
-        if curloop >= 0:
-            parents[curloop] = stack[stack_level]
-            stack_level += 1
-            stack[stack_level] = curloop
+        curloop = np.abs(looporder[i]) - 1
+        is_bound = (l_sites[curloop] >= 0) * (r_sites[curloop] >= 0)
+        is_left_leg = (looporder[i] > 0)
+        if is_bound:
+            if is_left_leg:
+                parents[curloop] = stack[stack_level]
+                stack_level += 1
+                stack[stack_level] = curloop
+            else:
+                parent = stack[stack_level]
+                stack_level -= 1
+                assert curloop == parent, 'the loops are not nested'
         else:
-            parent = stack[stack_level]
-            stack_level -= 1
-            assert curloop + 2 == - parent, 'the loops are not nested'
+            parents[curloop] = -2
 
     return np.array(parents)
 
