@@ -1,3 +1,6 @@
+*.pyc
+*.un~
+
 # Object files
 *.o
 *.ko
