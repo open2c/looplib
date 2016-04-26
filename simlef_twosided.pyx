@@ -337,7 +337,9 @@ cdef class Event_heap:
 cpdef simulate(p):
     '''Simulate a system of loop extruding LEFs on a 1d lattice.
     Allows to simulate two different types of LEFs, with different
-    residence times and rates of backstep.
+    residence times and rates of backstep. This version of the simulations
+    allows to simulated two-sided extrusion, i.e. type of extrusion when
+    blocking one side of LEF also block the other.
 
     Parameters
     ----------
