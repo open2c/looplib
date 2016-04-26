@@ -4,7 +4,14 @@ from matplotlib.patches import Arc, Polygon
 
 import looptools
 
-def plot_interaction(l, r, n_lef=0, height_factor=1.0, max_height = 150, height=None, y=10):#, triag_width=100):
+def plot_interaction(
+    l, r, n_lef=0,
+    height_factor=1.0,
+    max_height = 150,
+    height=None,
+    y=10):
+    """Visualize an individual loop with an arc diagram.
+    """
     arc_center = ((l+r)/2,y)
     arc_height = (min(max_height, (r-l)/2.0*height_factor)
                   if (height is None) else height)
@@ -29,6 +36,8 @@ def plot_interaction(l, r, n_lef=0, height_factor=1.0, max_height = 150, height=
 
 
 def plot_lefs(l_sites, r_sites, L, site_width_bp = 600):
+    """Plot an arc diagram for a list of loops.
+    """
     plt.figure(figsize=(15,5))
     plt.gca().spines['top'].set_visible(False)
     plt.gca().spines['bottom'].set_visible(False)

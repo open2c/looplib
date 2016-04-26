@@ -8,5 +8,7 @@
     - identify the positions between the root loops with get_backbone()
     - identify stacked LEFs with stack_lefs()
     
+- loopviz.py - visualize loops with plot_lefs()
+
 - simlef_twosided.pyx - simulate loops extrusion with synchronized extrusion blocking
 
