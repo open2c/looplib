@@ -89,6 +89,8 @@ def get_loop_branches(parents, l_sites=None):
     return daughters
 
 def stack_lefs(l_sites, r_sites):
+    """Identify groups of stacked LEFs (i.e. tightly nested LEFs)
+    """
     order = np.argsort(l_sites)
     n_lefs = np.ones(l_sites.size)
     parent_i, i = 0,0
@@ -105,6 +107,8 @@ def stack_lefs(l_sites, r_sites):
     return n_lefs
 
 def get_backbone(l_sites, r_sites, rootsMask=None, N=None, include_tails=True):
+    """Find the positions between the root loops aka the backbone.
+    """
     backboneidxs = []
     if rootsMask is None:
         rootsMask = get_roots(l_sites, r_sites)
