@@ -1,5 +1,9 @@
-*.pyc
+*.py[cod]
 *.un~
+
+# Build files
+build/
+dist/
 
 # Object files
 *.o

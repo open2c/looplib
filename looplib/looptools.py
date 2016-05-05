@@ -1,9 +1,10 @@
+from __future__ import division, print_function
 import numpy as np
 
 #import pyximport; pyximport.install(
 #    setup_args={"include_dirs":np.get_include()},
 #    reload_support=True)
-from looptools_c import get_parent_loops, get_stationary_loops
+from .looptools_c import get_parent_loops, get_stationary_loops
 
 def convert_loops_to_sites(loops, r_sites=None):
     """
@@ -43,7 +44,7 @@ def get_roots(l_sites, r_sites=None):
     try:
         parent_loops = get_parent_loops(l_sites, r_sites)
     except Exception as e:
-        print 'Cannot find root loops: ', e.message
+        print('Cannot find root loops: ', e.message)
         return []
 
     return (parent_loops == -1)
