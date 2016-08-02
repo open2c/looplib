@@ -220,7 +220,7 @@ cdef regenerate_event(System system, Event_heap evheap, np.int64_t event_idx):
 
         if (system.locs[leg_idx] >= 0):
             # Local velocity = velocity * permeability
-            local_vel = (system.perms[system.locs[leg_idx] + (direction+1)/2]
+            local_vel = (system.perms[system.locs[leg_idx] + (direction+1)//2]
                 * system.vels[leg_idx + (direction+1) * system.N])
 
             if local_vel > 0:
@@ -307,7 +307,7 @@ cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx)
         status = 1
         if (prev_pos >= 0):
             # make a step only if there is no boundary and the new position is unoccupied
-            if (system.perms[prev_pos + (direction + 1) / 2] > 0):
+            if (system.perms[prev_pos + (direction + 1) // 2] > 0):
                 if system.lattice[prev_pos+direction] < 0:
                     status *= system.make_step(leg_idx, direction)
                     # regenerate events for the previous and the new neighbors
@@ -367,7 +367,7 @@ cdef np.int64_t do_event(System system, Event_heap evheap, np.int64_t event_idx)
         regenerate_neighbours(system, evheap, new_pos)
         regenerate_neighbours(system, evheap, new_pos + 1)
     else:
-        print 'event_idx assumed a forbidden value :', event_idx
+        print('event_idx assumed a forbidden value :', event_idx)
 
     return status
 
@@ -494,7 +494,7 @@ cpdef simulate(p, verbose=True):
         status = do_event(system, evheap, event_idx)
 
         if status == 0:
-            print 'an assertion failed somewhere'
+            print('an assertion failed somewhere')
             return 0
 
         if system.time > prev_snapshot_t + T_MAX / N_SNAPSHOTS:
@@ -504,7 +504,7 @@ cpdef simulate(p, verbose=True):
             ts_traj[snapshot_idx] = system.time
             snapshot_idx += 1
             if verbose and (snapshot_idx % 10 == 0):
-                print PROCESS_NAME, snapshot_idx, system.time, T_MAX
+                print(PROCESS_NAME, snapshot_idx, system.time, T_MAX)
             np.random.seed()
 
     return np.array(l_sites_traj), np.array(r_sites_traj), np.array(ts_traj)

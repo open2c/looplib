@@ -464,11 +464,11 @@ cpdef simulate(p):
                 time + rand_exp(1.0 / RS_OFF[event_idx - 2 * state.N]))
 
         #if not state.check_state():
-        #    print 'the state check has failed'
+        #    print('the state check has failed')
         #    return 0
 
         if last_event == 0:
-            print 'an assertion failed somewhere'
+            print('an assertion failed somewhere')
             return 0
 
         if time > prev_snapshot_t + T_MAX / N_SNAPSHOTS:
@@ -478,7 +478,7 @@ cpdef simulate(p):
             ts_traj[snapshot_idx] = time
             snapshot_idx += 1
             if snapshot_idx % 10 == 0:
-                print PROCESS_NAME, snapshot_idx, time, T_MAX
+                print(PROCESS_NAME, snapshot_idx, time, T_MAX)
             np.random.seed()
 
     return np.array(l_sites_traj), np.array(r_sites_traj), np.array(ts_traj)
