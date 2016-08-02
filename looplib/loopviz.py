@@ -1,8 +1,9 @@
+from __future__ import division, print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Arc, Polygon
 
-import looptools
+from . import looptools
 
 def plot_interaction(
     l, r, n_lef=0,

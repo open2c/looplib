@@ -3,7 +3,7 @@
 ##cython: wraparound=False
 ##cython: nonecheck=False
 ##cython: initializedcheck=False
-
+from __future__ import division, print_function
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -204,22 +204,22 @@ cdef class State:
         cdef np.int64_t i
         for i in range(self.N):
             if (self.l_sites[i] == self.r_sites[i]):
-                print self.l_sites[i], self.r_sites[i]
+                print(self.l_sites[i], self.r_sites[i])
                 okay = 0
             elif (self.l_sites[i] < 0) or (self.l_sites[i] >= self.L):
-                print self.l_sites[i]
+                print(self.l_sites[i])
                 okay = 0
             elif (self.r_sites[i] < 0) or (self.r_sites[i] >= self.L):
-                print self.r_sites[i]
+                print(self.r_sites[i])
                 okay = 0
             elif i > 0 and self.l_extendable[i] and self.lattice[self.l_sites[i]-1] != 0:
-                print i, 'should not be l-extandable'
+                print(i, 'should not be l-extandable')
             elif i > 0 and self.r_shrinkable[i] and self.lattice[self.r_sites[i]-1] != 0:
-                print i, 'should not be r-shrinkable'
+                print (i, 'should not be r-shrinkable')
             elif i < self.L-1 and self.r_extendable[i] and self.lattice[self.r_sites[i]+1] != 0:
-                print i, 'should not be r-extandable'
+                print (i, 'should not be r-extandable')
             elif i < self.L-1 and self.l_shrinkable[i] and self.lattice[self.l_sites[i]+1] != 0:
-                print i, 'should not be l-shrinkable'
+                print (i, 'should not be l-shrinkable')
         return okay
 
 cdef np.int64_t move_loop(State state, np.int64_t loop_idx) except 0:

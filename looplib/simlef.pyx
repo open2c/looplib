@@ -3,7 +3,7 @@
 ##cython: wraparound=False
 ##cython: nonecheck=False
 ##cython: initializedcheck=False
-
+from __future__ import division, print_function
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -120,17 +120,17 @@ cdef class System:
         cdef np.int64_t i
         for i in range(self.N):
             if (self.locs[i] == self.locs[i+self.N]):
-                print 'loop ' , i, 'has both legs at ', self.locs[i]
+                print('loop ' , i, 'has both legs at ', self.locs[i])
                 okay = 0
             if (self.locs[i] >= self.L):
-                print 'leg ', i, 'is located outside of the system: ', self.locs[i]
+                print('leg ', i, 'is located outside of the system: ', self.locs[i])
                 okay = 0
             if (self.locs[i+self.N] >= self.L):
-                print 'leg ', i+self.N, 'is located outside of the system: ', self.locs[i+self.N]
+                print('leg ', i+self.N, 'is located outside of the system: ', self.locs[i+self.N])
                 okay = 0
             if (((self.locs[i] < 0) and (self.locs[i+self.N] >= 0 ))
                 or ((self.locs[i] >= 0) and (self.locs[i+self.N] < 0 ))):
-                print 'the legs of the loop', i, 'are inconsistent: ', self.locs[i], self.locs[i+self.N]
+                print('the legs of the loop', i, 'are inconsistent: ', self.locs[i], self.locs[i+self.N])
                 okay = 0
         return okay
 
@@ -257,7 +257,7 @@ cdef regenerate_neighbours(System system, Event_heap evheap, np.int64_t pos):
     # regenerate right step for the neighbour on the left
     if (pos>0) and system.lattice[pos-1] >= 0:
         regenerate_event(system, evheap, system.lattice[pos-1] + 2 * system.N)
-
+ 
 cdef regenerate_all_loop_events(System system, Event_heap evheap,
                                 np.int64_t loop_idx):
     """
