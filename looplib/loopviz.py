@@ -10,7 +10,9 @@ def plot_interaction(
     height_factor=1.0,
     max_height = 150,
     height=None,
-    y=10):
+    y=10,
+    plot_text=True,
+    color=(223.0/255.0,90/255.0,73/255.0)):
     """Visualize an individual loop with an arc diagram.
     """
     arc_center = ((l+r)/2,y)
@@ -23,20 +25,28 @@ def plot_interaction(
             theta2=180,
             alpha=0.45,
             lw=5,
-            color=(223.0/255.0,90/255.0,73/255.0),
+            color=color,
             capstyle='round')
     plt.gca().add_artist(arc)
 
-    if n_lef > 1 and arc_center[0] < plt.xlim()[1]:
+    if n_lef > 1 and arc_center[0] < plt.xlim()[1] and plot_text:
         plt.text(x=arc_center[0],
                  y=arc_center[1]+arc_height/2+30,
                  horizontalalignment='center',
                  verticalalignment='center',
                  s=str(int(n_lef)),
-                 fontsize=20)
+                 fontsize=20,
+                 color=color
+                )
 
 
-def plot_lefs(l_sites, r_sites, L, site_width_bp = 600):
+def plot_lefs(
+        l_sites, 
+        r_sites, 
+        L, 
+        site_width_bp = 600, 
+        colors=(223.0/255.0,90/255.0,73/255.0),
+        **kwargs):
     """Plot an arc diagram for a list of loops.
     """
     plt.figure(figsize=(15,5))
@@ -60,7 +70,12 @@ def plot_lefs(l_sites, r_sites, L, site_width_bp = 600):
 
     n_lefs = looptools.stack_lefs(l_sites,r_sites)
     for i in range(l_sites.size):
-        plot_interaction(l_sites[i],r_sites[i],n_lefs[i])
+        plot_interaction(
+            l_sites[i],
+            r_sites[i],
+            n_lefs[i],
+            color=colors[i] if (type(colors) in (list, np.ndarray)) else colors,
+            **kwargs)
 
     plt.xlim(-20,L+20)
     plt.ylim(-30,200)
