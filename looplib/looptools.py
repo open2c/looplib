@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 import numpy as np
+import collections
 
 #import pyximport; pyximport.install(
 #    setup_args={"include_dirs":np.get_include()},
@@ -83,11 +84,11 @@ def get_loop_branches(parents, l_sites=None):
     sort the daughter loops according to their position along the loop.
     '''
     nloops = len(parents)
-    daughters = [np.where(parents==i)[0] for i in range(nloops)]
+    children = [np.where(parents==i)[0] for i in range(nloops)]
     if not (l_sites is None):
         for i in range(nloops):
-            daughters[i] = daughters[i][np.argsort(l_sites[daughters[i]])]
-    return daughters
+            children[i] = children[i][np.argsort(l_sites[children[i]])]
+    return children
 
 def stack_lefs(l_sites, r_sites):
     """Identify groups of stacked LEFs (i.e. tightly nested LEFs)
@@ -132,4 +133,12 @@ def get_backbone(l_sites, r_sites, rootsMask=None, N=None, include_tails=True):
     backboneidxs = np.concatenate(backboneidxs)
     return backboneidxs
 
-
+def get_n_leafs(idx, children):
+    if isinstance(idx, collections.Iterable):
+        return np.array([get_n_leafs(i, children) for i in idx])
+    else:
+        if len(children[idx])==0:
+            return 1
+        else:
+            return sum([get_n_leafs(child, children) 
+                        for child in children[idx]])
