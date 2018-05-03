@@ -7,17 +7,24 @@ import collections
 #    reload_support=True)
 from .looptools_c import get_parent_loops, get_stationary_loops
 
-def convert_loops_to_sites(loops, r_sites=None):
+def convert_loops_to_sites(loops, r_sites=None, specifyVerticalArray=False):
     """
     Convert a list of loops defined by tuples (left_site, right_side) into
-    two np.arrays left_sites, right_sites.
+    two np.arrays left_sites, right_sites.  
+    Vertical numpy array format can be specified, otherwise shape will be autodetected. 
     """
+    if specifyVerticalArray==True:
+        if loops.shape[1] != 2:
+            raise Exception('Shape specification Error')
+        return loops[:,0],loops[:,1]
+
     if r_sites is None:
-        if (issubclass(type(loops), list)
-            and issubclass(type(loops[0]), tuple)):
+        if (issubclass(type(loops), list) and issubclass(type(loops[0]), tuple)):
             l_sites, r_sites = np.array([i for i,j in loops]), np.array([j for i,j in loops])
         elif (issubclass(type(loops), np.ndarray) and (loops.ndim == 2)):
-            if (loops.shape[0] == 2):
+            if (loops.shape[0]==loops.shape[1]):
+                raise Exception('Loop array dimensions are ambiguous')
+            elif (loops.shape[0] == 2):
                 return loops[0], loops[1]
             elif (loops.shape[1] == 2):
                 return loops[:,0], loops[:,1]
