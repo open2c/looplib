@@ -81,15 +81,16 @@ def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
     cumL = 0
     if loop_size <= min_loop_size:
         return []
+
     while True:
         looplens.append(min_loop_size
             + np.round(np.random.gamma(loop_k, float(loop_size - min_loop_size)/loop_k)))
         spacers.append(spacing)
         cumL += looplens[-1] + spacers[-1]
-        if cumL > N-1:
+        if cumL >= N:
             if len(looplens) > 1:
-                looplens.pop(len(looplens) - 1)
-                spacers.pop(len(spacers) - 1)
+                looplens.pop()
+                spacers.pop()
             break
 
     looplens, spacers = np.array(looplens), np.array(spacers)
@@ -98,6 +99,8 @@ def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
+
+    assert np.all(loops<N)
 
     return loops
 
@@ -108,25 +111,29 @@ def two_layer_gamma_loop_array(N,
                           outer_inner_offset=1):
 
     outer_loops = gamma_loop_array(
-                    N,
-                    outer_loop_size,
-                    outer_gamma_k,
-                    outer_loop_spacing,
-                    2*outer_inner_offset+inner_loop_spacing+1)
+        N,
+        outer_loop_size,
+        outer_gamma_k,
+        outer_loop_spacing,
+        2*outer_inner_offset+inner_loop_spacing+1)
 
     if not (inner_loop_size):
         return outer_loops
 
     inner_loops = []
-    for l,r in outer_loops:
+    for l, r in outer_loops:
         looplen = r-l
-        inner_loops += [(k[0] + l + outer_inner_offset, k[1] + l + outer_inner_offset)
-                        for k in gamma_loop_array(
-                            looplen-2*outer_inner_offset,
-                            inner_loop_size,
-                            inner_gamma_k,
-                            inner_loop_spacing,
-                            3)]
+
+        for inner_l, inner_r in gamma_loop_array(
+            looplen-2*outer_inner_offset,
+            inner_loop_size,
+            inner_gamma_k,
+            inner_loop_spacing,
+            3):
+
+            inner_loops.append(
+                    inner_l + l + outer_inner_offset,
+                    inner_r + l + outer_inner_offset)
 
     outer_loops, inner_loops  = np.array(outer_loops), np.array(inner_loops)
 
