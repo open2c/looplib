@@ -7,6 +7,7 @@ import collections
 #    reload_support=True)
 from .looptools_c import get_parent_loops, get_stationary_loops
 
+
 def convert_loops_to_sites(loops, r_sites=None):
     """
     Convert a list of loops defined by tuples (left_site, right_side) into
@@ -35,6 +36,7 @@ def convert_loops_to_sites(loops, r_sites=None):
 
     return l_sites, r_sites
 
+
 def get_roots(l_sites, r_sites=None):
     """Return the indices of root loops (i.e. loops not nested into
     other loops).
@@ -49,6 +51,7 @@ def get_roots(l_sites, r_sites=None):
         return []
 
     return (parent_loops == -1)
+
 
 def get_root_births_deaths(prev_lsites, new_lsites, delta):
     """
@@ -67,6 +70,7 @@ def get_root_births_deaths(prev_lsites, new_lsites, delta):
 
     return births, deaths
 
+
 def avg_num_branching_points(parents):
     sameparent = (parents[:, None] == parents[None, :])
     np.fill_diagonal(sameparent, False)
@@ -79,6 +83,7 @@ def avg_num_branching_points(parents):
     avgnumbranches = numbranches / float((parents == -1).sum())
     return avgnumbranches
 
+
 def get_loop_branches(parents, l_sites=None):
     '''Get the list of list of daughter loops. If `l_sites` is provided,
     sort the daughter loops according to their position along the loop.
@@ -89,6 +94,7 @@ def get_loop_branches(parents, l_sites=None):
         for i in range(nloops):
             children[i] = children[i][np.argsort(l_sites[children[i]])]
     return children
+
 
 def stack_lefs(l_sites, r_sites):
     """Identify groups of stacked LEFs (i.e. tightly nested LEFs)
@@ -107,6 +113,7 @@ def stack_lefs(l_sites, r_sites):
         if i >= l_sites.size-1:
             break
     return n_lefs
+
 
 def get_backbone(l_sites, r_sites=None, rootsMask=None, N=None, include_tails=True):
     """Find the positions between the root loops aka the backbone.
@@ -132,6 +139,7 @@ def get_backbone(l_sites, r_sites=None, rootsMask=None, N=None, include_tails=Tr
 
     backboneidxs = np.concatenate(backboneidxs)
     return backboneidxs
+
 
 def get_n_leafs(idx, children):
     if isinstance(idx, collections.Iterable):

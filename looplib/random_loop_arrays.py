@@ -49,7 +49,6 @@ def exponential_loop_array(
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
-    loops = [(i[0],i[1]) for i in loops]
 
     return loops
 
@@ -72,9 +71,8 @@ def two_layer_exponential_loops(N, outer_loop_size, outer_loop_spacing,
                         for i in exponential_loop_array(looplen-2*offset,
                             inner_loop_size, inner_loop_spacing)]
 
-    return outer_loops+inner_loops
-
-
+    outer_loops, inner_loops  = np.array(outer_loops), np.array(inner_loops)
+    return outer_loops, inner_loops
 
 
 def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
@@ -100,7 +98,6 @@ def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
-    loops = [(i[0],i[1]) for i in loops]
 
     return loops
 
@@ -130,6 +127,8 @@ def two_layer_gamma_loop_array(N,
                             inner_gamma_k,
                             inner_loop_spacing,
                             3)]
+
+    outer_loops, inner_loops  = np.array(outer_loops), np.array(inner_loops)
 
     return outer_loops, inner_loops
 
