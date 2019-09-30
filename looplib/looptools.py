@@ -5,6 +5,7 @@ import collections
 #import pyximport; pyximport.install(
 #    setup_args={"include_dirs":np.get_include()},
 #    reload_support=True)
+
 from .looptools_c import get_parent_loops, get_stationary_loops
 
 
@@ -37,12 +38,12 @@ def convert_loops_to_sites(loops, r_sites=None):
     return l_sites, r_sites
 
 
-def get_roots(l_sites, r_sites=None):
+def get_roots(loops):
     """Return the indices of root loops (i.e. loops not nested into
     other loops).
     """
 
-    l_sites, r_sites = convert_loops_to_sites(l_sites, r_sites)
+    l_sites, r_sites = convert_loops_to_sites(loops)
 
     try:
         parent_loops = get_parent_loops(l_sites, r_sites)
@@ -84,21 +85,24 @@ def avg_num_branching_points(parents):
     return avgnumbranches
 
 
-def get_loop_branches(parents, l_sites=None):
-    '''Get the list of list of daughter loops. If `l_sites` is provided,
+def get_loop_branches(parents, loops=None):
+    '''Get the list of list of daughter loops. If `loops` is provided,
     sort the daughter loops according to their position along the loop.
     '''
     nloops = len(parents)
     children = [np.where(parents==i)[0] for i in range(nloops)]
-    if not (l_sites is None):
+    if not (loops is None):
         for i in range(nloops):
-            children[i] = children[i][np.argsort(l_sites[children[i]])]
+            children[i] = children[i][np.argsort(loops[:,0][children[i]])]
     return children
 
 
-def stack_lefs(l_sites, r_sites):
+def stack_lefs(loops):
     """Identify groups of stacked LEFs (i.e. tightly nested LEFs)
     """
+
+    l_sites, r_sites = convert_loops_to_sites(loops)
+
     order = np.argsort(l_sites)
     n_lefs = np.ones(l_sites.size)
     parent_i, i = 0,0
@@ -115,27 +119,29 @@ def stack_lefs(l_sites, r_sites):
     return n_lefs
 
 
-def get_backbone(l_sites, r_sites=None, rootsMask=None, N=None, include_tails=True):
+def get_backbone(loops, rootsMask=None, N=None, include_tails=True):
     """Find the positions between the root loops aka the backbone.
     """
     backboneidxs = []
     if rootsMask is None:
-        rootsMask = get_roots(l_sites, r_sites)
+        rootsMask = get_roots(loops)
 
-    rootsSorted = np.where(rootsMask)[0][np.argsort(l_sites[rootsMask])]
+    rootsSorted = np.where(rootsMask)[0][np.argsort(loops[:,0][rootsMask])]
 
     if include_tails and (N is None):
         raise Exception('If you want to include tails, please specify the length of the chain')
 
     for i in range(len(rootsSorted)-1):
         backboneidxs.append(
-            np.arange(r_sites[rootsSorted[i]], l_sites[rootsSorted[i+1]]+1, dtype=np.int))
+                np.arange(loops[:,1][rootsSorted[i]], 
+                          loops[:,0][rootsSorted[i+1]]+1,
+                          dtype=np.int))
 
     if include_tails:
         backboneidxs.insert(0,
-            np.arange(0, l_sites[rootsSorted[0]] + 1, dtype=np.int))
+            np.arange(0, loops[:,0][rootsSorted[0]] + 1, dtype=np.int))
         backboneidxs.append(
-            np.arange(r_sites[rootsSorted[-1]], N, dtype=np.int))
+            np.arange(loops[:,1][rootsSorted[-1]], N, dtype=np.int))
 
     backboneidxs = np.concatenate(backboneidxs)
     return backboneidxs
