@@ -131,9 +131,9 @@ def two_layer_gamma_loop_array(N,
             inner_loop_spacing,
             3):
 
-            inner_loops.append(
+            inner_loops.append((
                     inner_l + l + outer_inner_offset,
-                    inner_r + l + outer_inner_offset)
+                    inner_r + l + outer_inner_offset))
 
     outer_loops, inner_loops  = np.array(outer_loops), np.array(inner_loops)
 
