@@ -99,6 +99,7 @@ def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
+    loops = loops[loops[:,1]-loops[:,0] >= min_loop_size] 
 
     assert np.all(loops<N)
 
