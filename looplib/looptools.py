@@ -108,7 +108,7 @@ def stack_lefs(l_sites, r_sites):
             break
     return n_lefs
 
-def get_backbone(l_sites, r_sites, rootsMask=None, N=None, include_tails=True):
+def get_backbone(l_sites, r_sites=None, rootsMask=None, N=None, include_tails=True):
     """Find the positions between the root loops aka the backbone.
     """
     backboneidxs = []
