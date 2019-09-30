@@ -134,6 +134,7 @@ def two_layer_gamma_loop_array(N,
             inner_loops.append((
                     inner_l + l + outer_inner_offset,
                     inner_r + l + outer_inner_offset))
+            assert inner_r <= r - outer_inner_offset
 
     outer_loops, inner_loops  = np.array(outer_loops), np.array(inner_loops)
 
