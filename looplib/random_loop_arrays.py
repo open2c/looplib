@@ -108,14 +108,14 @@ def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
 def two_layer_gamma_loop_array(N,
                           outer_loop_size, outer_gamma_k, outer_loop_spacing,
                           inner_loop_size, inner_gamma_k, inner_loop_spacing,
-                          offset=1):
+                          outer_inner_offset=1):
 
     outer_loops = gamma_loop_array(
                     N,
                     outer_loop_size,
                     outer_gamma_k,
                     outer_loop_spacing,
-                    2*offset+inner_loop_spacing+1)
+                    2*outer_inner_offset+inner_loop_spacing+1)
 
     if not (inner_loop_size):
         return outer_loops
@@ -123,9 +123,9 @@ def two_layer_gamma_loop_array(N,
     inner_loops = []
     for l,r in outer_loops:
         looplen = r-l
-        inner_loops += [(k[0] + l + offset, k[1] + l + offset)
+        inner_loops += [(k[0] + l + outer_inner_offset, k[1] + l + outer_inner_offset)
                         for k in gamma_loop_array(
-                            looplen-2*offset,
+                            looplen-2*outer_inner_offset,
                             inner_loop_size,
                             inner_gamma_k,
                             inner_loop_spacing,
