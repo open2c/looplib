@@ -76,32 +76,51 @@ def two_layer_exponential_loops(N, outer_loop_size, outer_loop_spacing,
 
 
 def gamma_loop_array(N, loop_size, loop_k, spacing=1, min_loop_size=3):
+    ## not very accurate - the average loop length may deviate from the target
+    ## by up to 10%
     looplens = []
     spacers = []
     cumL = 0
+
     if loop_size <= min_loop_size:
         return []
 
     while True:
-        looplens.append(min_loop_size
-            + np.round(np.random.gamma(loop_k, float(loop_size - min_loop_size)/loop_k)))
-        spacers.append(spacing)
-        cumL += looplens[-1] + spacers[-1]
-        if cumL >= N:
-            if len(looplens) > 1:
+        new_loop_len = (
+            min_loop_size
+            + np.round(
+                np.random.gamma(
+                    loop_k, 
+                    float(loop_size - min_loop_size)/loop_k))
+        )
+
+        if cumL + new_loop_len + spacing < N-1:
+            looplens.append(new_loop_len)
+            spacers.append(spacing)
+            cumL += new_loop_len + spacing
+        else:
+            if looplens and (N-1-cumL+spacers[-1] < loop_size):
+                spacers[-1] = 0 
                 looplens.pop()
-                spacers.pop()
+                looplens.append(N-1-sum(looplens)-sum(spacers))
+                cumL = N - 1
+            else:
+                looplens.append(N-1-cumL)
+                spacers.append(0)
+                cumL = N - 1
             break
 
+    assert sum(looplens)+sum(spacers) == N-1
     looplens, spacers = np.array(looplens), np.array(spacers)
-    looplens = looplens * float(N - 1 - spacers.sum()) / (looplens.sum())
 
+    #looplens = looplens * float(N - 1 - spacers.sum()) / (looplens.sum())
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
-    loops = loops[loops[:,1]-loops[:,0] >= min_loop_size] 
+    #loops = loops[loops[:,1]-loops[:,0] >= min_loop_size] 
 
     assert np.all(loops<N)
+    assert np.all(looplens>0)
 
     return loops
 
