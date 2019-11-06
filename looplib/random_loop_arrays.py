@@ -68,7 +68,7 @@ def exponential_overlapping_loop_array(
             size=loop_n)
             ).astype(np.int)
 
-    loopstarts = np.round(np.random.random(size=int(N)) * (N-looplens)).astype(np.int)
+    loopstarts = np.round(np.random.random(size=int(loop_n)) * (N-looplens)).astype(np.int)
     loops = np.vstack([loopstarts, loopstarts + looplens]).T
 
     return loops
