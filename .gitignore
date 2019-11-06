@@ -37,3 +37,7 @@ dist/
 
 # Debug files
 *.dSYM/
+*.c
+*.backup
+looplib.egg-info/*
+.ipynb_checkpoints/*
