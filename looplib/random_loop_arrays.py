@@ -19,7 +19,10 @@ def uniform_loop_array(N, loop_size, loop_spacing):
 
 
 def exponential_loop_array(
-        N, loop_size, spacing, min_loop_size=3,
+        N, 
+        loop_size, 
+        spacing, 
+        min_loop_size=3,
         loop_spacing_distr='uniform'):
     
     looplens = []
@@ -49,6 +52,24 @@ def exponential_loop_array(
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
+
+    return loops
+
+
+def exponential_overlapping_loop_array(
+        N, 
+        loop_n,
+        loop_size, 
+        min_loop_size=3,
+        ):
+    
+    looplens = min_loop_size + np.round(
+        np.random.exponential(loop_size-min_loop_size,
+            size=loop_n)
+            ).astype(np.int)
+
+    loopstarts = np.round(np.random.random(size=N) * (N-looplens)).astype(np.int)
+    loops = np.vstack([loopstarts, loopstarts + looplens]).T
 
     return loops
 
