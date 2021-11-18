@@ -47,7 +47,7 @@ def exponential_loop_array(
             break
 
     looplens, spacers = np.array(looplens), np.array(spacers)
-    looplens = looplens * float(N - spacers.sum()) / (looplens.sum())
+    looplens = looplens * float(N - 1 - spacers.sum()) / (looplens.sum())
 
     loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
