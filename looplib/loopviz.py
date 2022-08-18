@@ -12,7 +12,7 @@ def plot_interaction(
     height=None,
     y=10,
     plot_text=True,
-    color=(223.0/255.0,90/255.0,73/255.0)):
+    color='tomato'):
     """Visualize an individual loop with an arc diagram.
     """
     arc_center = ((l+r)/2,y)
@@ -39,16 +39,11 @@ def plot_interaction(
                  color=color
                 )
 
-
-def plot_lefs(
-        l_sites, 
-        r_sites, 
-        L, 
-        site_width_bp = 600, 
-        colors=(223.0/255.0,90/255.0,73/255.0),
-        **kwargs):
-    """Plot an arc diagram for a list of loops.
-    """
+def prepare_canvas(
+    L,
+    site_width_bp = None, 
+    ):
+    
     plt.figure(figsize=(15,5))
     plt.gca().spines['top'].set_visible(False)
     plt.gca().spines['bottom'].set_visible(False)
@@ -61,21 +56,35 @@ def plot_lefs(
         left='off',
         direction='out',
         top='off')
-    plt.axhline(0, color='gray', lw=5,zorder=-1)
+    plt.xlim(-20,L+20)
+    plt.ylim(-30,200)
+    
     plt.yticks([])
-    plt.xticks([100*i*1000/float(site_width_bp) for i in range(16)],
-               [100*i for i in range(16)],
-               fontsize=20)
-    plt.xlabel('chromosomal position, kb', fontsize=20)
+    
+    plt.axhline(0, color='gray', lw=5,zorder=-1)
 
-    n_lefs = looptools.stack_lefs(l_sites,r_sites)
+    if site_width_bp:
+        plt.xticks([100*i*1000/float(site_width_bp) for i in range(16)],
+                   [100*i for i in range(16)],
+                   fontsize=20)
+        plt.xlabel('chromosomal position, kb', fontsize=20)
+    
+    
+def plot_lefs(
+        l_sites, 
+        r_sites, 
+        colors='tomato',
+        **kwargs):
+    """Plot an arc diagram for a list of loops.
+    """
+    
+    n_lefs = looptools.stack_lefs(np.vstack([l_sites,r_sites]).T)
     for i in range(l_sites.size):
         plot_interaction(
             l_sites[i],
             r_sites[i],
             n_lefs[i],
-            color=colors[i] if (type(colors) in (list, np.ndarray)) else colors,
+            color=colors[i] if (type(colors) in (list, tuple, np.ndarray)) else colors,
             **kwargs)
 
-    plt.xlim(-20,L+20)
-    plt.ylim(-30,200)
+
