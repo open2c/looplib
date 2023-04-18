@@ -23,37 +23,47 @@ def exponential_loop_array(
         loop_size, 
         spacing, 
         min_loop_size=3,
-        loop_spacing_distr='uniform'):
+        loop_spacing_distr='uniform',
+        skip_first_spacer=True,
+        resize=True):
     
     looplens = []
     spacers = []
     cumL = 0
     while True:
-        looplens.append(min_loop_size
-                        + np.round(np.random.exponential(loop_size-min_loop_size)))
-        if loop_spacing_distr == 'exp':
-            spacers.append(
-                max(1, int(np.round(np.random.exponential(spacing-1)))))
-        elif loop_spacing_distr == 'uniform':
-            spacers.append(spacing)
+        if cumL == 0 and skip_first_spacer:
+            spacer = 0
         else: 
-            raise ValueError('Unknown distribution of loop spacers')
+            if loop_spacing_distr == 'exp':
+                spacer = max(1, int(np.round(np.random.exponential(spacing-1))))
+            elif loop_spacing_distr == 'uniform':
+                spacer = spacing
+            else: 
+                raise ValueError('Unknown distribution of loop spacers')
+
+        spacers.append(spacer)
+
+        loop_len = min_loop_size + np.round(np.random.exponential(loop_size-min_loop_size))
+        looplens.append(loop_len)
+
             
-        cumL += looplens[-1] + spacers[-1]
+        cumL += + spacers[-1] + looplens[-1] 
         if cumL > N-1:
             if len(looplens) > 1:
-                looplens.pop(len(looplens) - 1)
                 spacers.pop(len(spacers) - 1)
+                looplens.pop(len(looplens) - 1)
             break
 
     looplens, spacers = np.array(looplens), np.array(spacers)
-    looplens = looplens * float(N - 1 - spacers.sum()) / (looplens.sum())
+    if resize:
+        looplens = looplens * float(N - 1 - spacers.sum()) / (looplens.sum())
 
-    loopstarts = np.r_[0, np.cumsum(looplens+spacers)[:-1]]
+    loopstarts = spacers[0] + np.r_[0, np.cumsum(looplens[:-1]+spacers[1:])]
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
 
-    return loops
+    return loops, looplens, spacers
+
 
 
 def exponential_overlapping_loop_array(
