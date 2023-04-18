@@ -62,7 +62,7 @@ def exponential_loop_array(
     loops = np.vstack([np.round(loopstarts), np.round(loopstarts + looplens)]).T
     loops = loops.astype('int')
 
-    return loops, looplens, spacers
+    return loops
 
 
 
