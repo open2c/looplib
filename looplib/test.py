@@ -1,4 +1,4 @@
-from looplib import *
+from looplib.looptools import *
 
 # Tests for FRiP
 lattice_length = 5
