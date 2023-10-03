@@ -156,3 +156,51 @@ def get_n_leafs(idx, children):
         else:
             return sum([get_n_leafs(child, children) 
                         for child in children[idx]])
+        
+
+
+def expand_boundary_positions(boundary_positions, offsets=[0]):
+    """
+    Expand boundary_positions by offsets. 
+    
+    Args:
+        boundary_positions : np.array
+            List of boundary locations.
+        offsets : np.array (optional)
+            List of window sizes. Defaults to [0], the positon of the boundaries.
+            For symmetric windows around boundaries, use np.arange(-window_size, (window_size) + 1)
+
+    Returns:
+        np.ndarray: Array containing peak positions.
+    """
+    expanded_positions = np.array([])
+
+    for offset in offsets:
+        inds_to_add = [boundary + offset for boundary in boundary_positions]
+        expanded_positions = np.hstack((expanded_positions, inds_to_add))
+
+    return expanded_positions.astype(int)
+
+
+
+
+def FRiP(number_of_sites, lef_positions, boundary_positions):
+    """
+    Calculate the Fraction of Reads in Peaks (FRiP).
+
+    FRiP is calculated as the sum of reads falling into peak positions
+    divided by the total number of LEF positions.
+
+    Args:
+        number_of_sites (int): The total number of sites.
+        extruders_positions (list): List of LEF positions.
+        peak_positions (list): List of peak positions.
+
+    Returns:
+        float: The Fraction of Reads in Peaks (FRiP).
+    """
+    
+    hist, bin_edges = np.histogram(lef_positions, np.arange(number_of_sites + 1))
+    return np.sum(hist[boundary_positions]) / len(lef_positions)
+
+
