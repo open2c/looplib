@@ -158,7 +158,6 @@ def get_n_leafs(idx, children):
                         for child in children[idx]])
         
 
-
 def expand_boundary_positions(boundary_positions, offsets=[0]):
     """
     Expand boundary_positions by offsets. 
@@ -182,8 +181,6 @@ def expand_boundary_positions(boundary_positions, offsets=[0]):
     return expanded_positions.astype(int)
 
 
-
-
 def FRiP(number_of_sites, lef_positions, boundary_positions):
     """
     Calculate the Fraction of Reads in Peaks (FRiP).
@@ -204,3 +201,27 @@ def FRiP(number_of_sites, lef_positions, boundary_positions):
     return np.sum(hist[boundary_positions]) / len(lef_positions)
 
 
+def get_collided_fraction(loops):
+    """
+    Calculate the fraction of collided loops (i.e., flanked on either side by other loops)
+
+    Args:
+        loops (Nx2 int array) : np.ndarray of loop positions
+
+    Returns:
+        float : fraction of collided loops
+    """
+    num_loops = loops.shape[0]
+
+    diff_like = np.abs(loops[None,:]-loops[:,None])
+    diff_cross = np.abs(loops[None,:]-np.flip(loops, axis=-1)[:,None])
+
+    np.fill_diagonal(diff_cross[...,0], 0)
+    np.fill_diagonal(diff_cross[...,1], 0)
+
+    collided_like = np.any(diff_like == 1, axis=(1,2))
+    collided_cross = np.any(diff_cross == 1, axis=(1,2))
+    
+    num_collided = np.count_nonzero(collided_like + collided_cross)
+        
+    return float(num_collided) / float(num_loops)
