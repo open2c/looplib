@@ -228,20 +228,21 @@ def calc_coverage(LEF_array, L):
     return coverage.sum() / float(L)
 
 
-def _get_collided_pairs(LEF_array, r=1.01):
+def _get_collided_pairs(LEF_array, r=1, tol=.01):
     """
     Locate LEF pairs with leg-leg separation distance of r sites or less
 
     Args:
         LEF_array (np.ndarray): Nx2 numpy array of extruder positions
-        r (float): (1D) distance cutoff
+        r (int): (1D) distance cutoff
+        tol (float): tolerance parameter for distance calculations
 
     Returns:
         np.ndarray: Mx2 array of collided extruder indices
     """
     
     tree = KDTree(LEF_array.reshape(-1,1))
-    pairs = tree.query_pairs(r=r, output_type='ndarray') // 2
+    pairs = tree.query_pairs(r=r+tol, output_type='ndarray') // 2
 
     distinct_pairs = np.diff(pairs).astype(bool)
     collided_pairs = pairs[distinct_pairs.flatten()]
@@ -249,13 +250,14 @@ def _get_collided_pairs(LEF_array, r=1.01):
     return collided_pairs
     
 
-def calc_collisions(LEF_array, r=1.01):
+def calc_collisions(LEF_array, r=1, tol=.01):
     """
     Calculate the number of collided LEFs (with at least one leg adjacent to another LEF)
     
     Args:
         LEF_array (np.ndarray): Nx2 numpy array of extruder positions
-        r (float): (1D) distance cutoff
+        r (int): (1D) distance cutoff
+        tol (float): tolerance parameter for distance calculations
 
     Returns:
         float: Collided extruder fraction
@@ -263,19 +265,20 @@ def calc_collisions(LEF_array, r=1.01):
     
     num_LEFs = LEF_array.shape[0]
     
-    pairs = _get_collided_pairs(LEF_array, r)
+    pairs = _get_collided_pairs(LEF_array, r, tol)
     collided_LEFs = np.unique(pairs.flatten())
         
     return len(collided_LEFs) / float(num_LEFs)
 	
 
-def calc_percolation(LEF_array, r=1.01):
+def calc_percolation(LEF_array, r=1, tol=.01):
     """
     Calculate the size of the largest collided LEF cluster
     
     Args:
         LEF_array (np.ndarray): Nx2 numpy array of extruder positions
-        r (float): (1D) distance cutoff
+        r (int): (1D) distance cutoff
+        tol (float): tolerance parameter for distance calculations
 
     Returns:
         float: Fraction of extruders comprising the largest collided cluster
@@ -283,7 +286,7 @@ def calc_percolation(LEF_array, r=1.01):
     
     num_LEFs = LEF_array.shape[0]
 
-    pairs = _get_collided_pairs(LEF_array, r)
+    pairs = _get_collided_pairs(LEF_array, r, tol)
     graph = nx.Graph(pairs.tolist())
     
     clusters = nx.connected_components(graph)
