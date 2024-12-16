@@ -228,7 +228,7 @@ def calc_coverage(LEF_array, L):
     return coverage.sum() / float(L)
 
 
-def _get_collided_pairs(LEF_array, r):
+def _get_collided_pairs(LEF_array, r=1.01):
     """
     Locate LEF pairs with leg-leg separation distance of r sites or less
 
@@ -249,7 +249,7 @@ def _get_collided_pairs(LEF_array, r):
     return collided_pairs
     
 
-def calc_collisions(LEF_array, r=1):
+def calc_collisions(LEF_array, r=1.01):
     """
     Calculate the number of collided LEFs (with at least one leg adjacent to another LEF)
     
@@ -269,7 +269,7 @@ def calc_collisions(LEF_array, r=1):
     return len(collided_LEFs) / float(num_LEFs)
 	
 
-def calc_percolation(LEF_array, r=1):
+def calc_percolation(LEF_array, r=1.01):
     """
     Calculate the size of the largest collided LEF cluster
     
