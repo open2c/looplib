@@ -93,9 +93,11 @@ def get_loop_branches(parents, loops=None):
     '''Get the list of list of daughter loops. If `loops` is provided,
     sort the daughter loops according to their position along the loop.
     '''
+
     nloops = len(parents)
     children = [np.where(parents==i)[0] for i in range(nloops)]
     if not (loops is None):
+        loops=np.array(loops)
         for i in range(nloops):
             children[i] = children[i][np.argsort(loops[:,0][children[i]])]
     return children
