@@ -11,12 +11,12 @@ cpdef get_parent_loops(l_sites, r_sites):
     cdef np.int_t[:] sortarg = np.argsort(np.r_[l_sites.astype(np.float64)+0.1,
                                                 r_sites.astype(np.float64)-0.1])
     cdef np.int_t[:] looporder = np.take(np.r_[np.arange(1,N+1),-np.arange(1,N+1)],sortarg)
-    cdef np.int_t[:] parents = -3 * np.ones(N, dtype=np.int)
+    cdef np.int_t[:] parents = -3 * np.ones(N, dtype=int)
 
     cdef np.int_t i = 0
     cdef np.int_t curloop = 0
     cdef np.int_t parent = 0
-    cdef np.int_t[:] stack = -1 * np.ones(N+1, dtype=np.int)
+    cdef np.int_t[:] stack = -1 * np.ones(N+1, dtype=int)
     cdef np.int_t stack_level = 0
     for i in range(2*N):
         curloop = np.abs(looporder[i]) - 1
