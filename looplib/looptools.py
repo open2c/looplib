@@ -17,15 +17,15 @@ def convert_loops_to_sites(loops, r_sites=None):
     """
     Convert a list of loops defined by tuples (left_site, right_side) into
     two np.arrays left_sites, right_sites.
+
+    LEFs in np.array format are understood to be Nx2 arrays
     """
     if r_sites is None:
         if (issubclass(type(loops), list)
             and issubclass(type(loops[0]), tuple)):
             l_sites, r_sites = np.array([i for i,j in loops]), np.array([j for i,j in loops])
         elif (issubclass(type(loops), np.ndarray) and (loops.ndim == 2)):
-            if (loops.shape[0] == 2):
-                return loops[0], loops[1]
-            elif (loops.shape[1] == 2):
+            if (loops.shape[1] == 2):
                 return loops[:,0], loops[:,1]
             else:
                 raise Exception('Unknown format of loop array')
@@ -47,7 +47,7 @@ def get_roots(loops):
     other loops).
     """
 
-    l_sites, r_sites = convert_loops_to_sites(loops)
+    l_sites, r_sites = loops[:,0], loops[:,1]
 
     try:
         parent_loops = get_parent_loops(l_sites, r_sites)
@@ -105,7 +105,7 @@ def stack_lefs(loops):
     """Identify groups of stacked LEFs (i.e. tightly nested LEFs)
     """
 
-    l_sites, r_sites = convert_loops_to_sites(loops)
+    l_sites, r_sites = loops[:,0], loops[:,1]
 
     order = np.argsort(l_sites)
     n_lefs = np.ones(l_sites.size)
@@ -139,13 +139,13 @@ def get_backbone(loops, rootsMask=None, N=None, include_tails=True):
         backboneidxs.append(
                 np.arange(loops[:,1][rootsSorted[i]], 
                           loops[:,0][rootsSorted[i+1]]+1,
-                          dtype=np.int))
+                          dtype=int))
 
     if include_tails:
         backboneidxs.insert(0,
-            np.arange(0, loops[:,0][rootsSorted[0]] + 1, dtype=np.int))
+            np.arange(0, loops[:,0][rootsSorted[0]] + 1, dtype=int))
         backboneidxs.append(
-            np.arange(loops[:,1][rootsSorted[-1]], N, dtype=np.int))
+            np.arange(loops[:,1][rootsSorted[-1]], N, dtype=int))
 
     backboneidxs = np.concatenate(backboneidxs)
     return backboneidxs
