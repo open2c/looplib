@@ -6,9 +6,6 @@ import networkx as nx
 
 import collections
 
-
-from scipy.spatial import distance
-
 #import pyximport; pyximport.install(
 #    setup_args={"include_dirs":np.get_include()},
 #    reload_support=True)
