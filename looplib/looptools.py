@@ -5,6 +5,7 @@ import numpy as np
 import networkx as nx
 
 import collections
+from scipy.spatial import distance
 
 #import pyximport; pyximport.install(
 #    setup_args={"include_dirs":np.get_include()},
@@ -293,4 +294,44 @@ def calc_percolation(LEF_array, r=1, tol=.01):
     clusters = sorted(clusters, key=len, reverse=True)
 	
     return len(clusters[0]) / float(num_LEFs)
+
+
+def find_nearby_legs(lefs):
+    """
+    Finds pairs of left and right leg sites with a distance of 1 between them.
+
+    Parameters:
+        lefs (ndarray): A 2D array where the first column contains left leg sites 
+                              and the second column contains right leg sites.
+
+    Returns:
+        ndarray: A flattened array of site pairs that have a distance of 1.
+    """
+    l_legs=lefs[:,0]
+    r_legs = lefs[:,1]
+    l_legs_2d = l_legs[:, np.newaxis]
+    r_legs_2d = r_legs[:, np.newaxis]
+
+    distances = distance.cdist(r_legs_2d, l_legs_2d)
+    indices = np.argwhere(distances ==1)
+    result = [(r_legs[i], l_legs[j]) for i, j in indices]
+    return np.array(result).flatten()
+
+def collision_at_barriers(lefs, ctcf_list):
+    """
+    Filters collision sites that overlap with specific CTCF sites.
+
+    Parameters:
+        lefs (ndarray): A 2D array where the first column contains left leg sites 
+                              and the second column contains right leg sites.
+        ctcf_list (ndarray): A 1D array of CTCF sites to filter against.
+
+    Returns:
+        ndarray: An array of collision sites that match the provided CTCF sites.
+    """
+    col_sites = find_nearby_legs(lefs)
+    col_at_ctcf = np.intersect1d(col_sites, ctcf_list)
+    return col_at_ctcf
+
+
 
