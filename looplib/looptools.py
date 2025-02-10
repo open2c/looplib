@@ -333,36 +333,5 @@ def collision_at_barriers(lefs, ctcf_list):
     col_at_ctcf = np.intersect1d(col_sites, ctcf_list)
     return col_at_ctcf
 
-def find_convergent_pairs(ctcf_right, ctcf_left, elements_between_pairs):
-    """
-    Finds pairs of convergent CTCF binding sites with exactly `elements_between_pairs` barrier elements between them.
 
-    Parameters:
-    ----------
-    ctcf_right : list of int
-        List of positions for CTCF binding sites on the right (right-facing CTCF sites).
-    ctcf_left : list of int
-        List of positions for CTCF binding sites on the left (left-facing CTCF sites).
-    elements_between_pairs : int
-        The number of barrier elements between the convergent CTCF pairs. 
-        For example, `elements_between_pairs=1` finds directly connected CTCF sites, 
-        `elements_between_pairs=2` finds CTCF sites with one intervening barrier element between them, etc.
-
-    Returns:
-    -------
-    list of list of int
-        A list of pairs of convergent CTCF sites, where each pair consists of one 
-        left-facing CTCF site and one right-facing CTCF site, separated by exactly `elements_between_pairs` barriers.
-    """
-    # Combine and sort CTCF positions from both directions
-    ctot = np.sort(np.array(ctcf_right + ctcf_left))
-    
-    # Find pairs of convergent CTCF elements with exactly `elements_between_pairs` barriers between them
-    convergent_pairs = [
-        [ctot[i], ctot[i + elements_between_pairs]] 
-        for i in range(len(ctot) - elements_between_pairs) 
-        if ctot[i] in ctcf_left and ctot[i + elements_between_pairs] in ctcf_right
-    ]
-    
-    return convergent_pairs
 
